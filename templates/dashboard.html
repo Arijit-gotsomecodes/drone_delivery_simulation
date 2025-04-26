@@ -1,0 +1,76 @@
+<!-- templates/dashboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drone Delivery Dashboard</title>
+    <style>
+        table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Drone Delivery System Dashboard</h1>
+    <p><a href="/request_delivery">Request New Delivery</a></p>
+
+    <h2>Fleet Status</h2>
+    <table>
+        <thead><tr><th>ID</th><th>Location (x,y)</th><th>Battery</th><th>Status</th></tr></thead>
+        <tbody id="fleet-body">
+        {% for d in drones %}
+            <tr>
+                <td>{{ d.id }}</td>
+                <td>{{ d.location[0] }}, {{ d.location[1] }}</td>
+                <td>{{ '%.1f' % d.battery }}</td>
+                <td>{{ d.status }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Delivery Log (Blockchain Records)</h2>
+    <table>
+        <thead><tr><th>Index</th><th>Timestamp</th><th>Message</th></tr></thead>
+        <tbody id="log-body">
+        {% for block in logs %}
+            <tr>
+                <td>{{ block.index }}</td>
+                <td>{{ block.timestamp }}</td>
+                <td>{{ block.message }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        function updateDashboard() {
+            fetch('/status').then(resp => resp.json()).then(data => {
+                // Update fleet table
+                let fleetBody = document.getElementById('fleet-body');
+                fleetBody.innerHTML = '';
+                data.drones.forEach(d => {
+                    let row = '<tr>'
+                            + '<td>' + d.id + '</td>'
+                            + '<td>' + d.location[0] + ', ' + d.location[1] + '</td>'
+                            + '<td>' + d.battery + '</td>'
+                            + '<td>' + d.status + '</td>'
+                            + '</tr>';
+                    fleetBody.innerHTML += row;
+                });
+                // Update log table
+                let logBody = document.getElementById('log-body');
+                logBody.innerHTML = '';
+                data.logs.forEach(l => {
+                    let row = '<tr>'
+                            + '<td>' + l.index + '</td>'
+                            + '<td>' + l.timestamp + '</td>'
+                            + '<td>' + l.message + '</td>'
+                            + '</tr>';
+                    logBody.innerHTML += row;
+                });
+            });
+        }
+        // Refresh data every 2 seconds
+        setInterval(updateDashboard, 2000);
+        window.onload = updateDashboard;
+    </script>
+</body>
+</html>
